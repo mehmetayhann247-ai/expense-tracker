@@ -1,4 +1,5 @@
 // Application State
+window.currentLanguage = 'tr';
 let currentLanguage = localStorage.getItem('appLanguage') || 'tr';
 let transactions = [];
 let budgets = []; // Budget management
