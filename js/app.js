@@ -1,5 +1,5 @@
 // Application State
-window.currentLanguage = 'tr';
+let currentLanguage = 'tr';
 let transactions = [];
 let budgets = []; // Budget management
 let goals = []; // Savings goals
