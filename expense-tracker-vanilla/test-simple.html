@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basit Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background: #f0f0f0; 
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .btn {
+            background: #6C63FF;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #5851d8;
+        }
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .info {
+            background: #2196F3;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Harcama Takipçisi Test</h1>
+        
+        <div class="info">
+            <h3>📡 Web Sunucu Durumu</h3>
+            <p id="server-status">Kontrol ediliyor...</p>
+        </div>
+        
+        <div class="info">
+            <h3>💾 LocalStorage Test</h3>
+            <p id="localstorage-status">Kontrol ediliyor...</p>
+        </div>
+        
+        <button class="btn" onclick="openMainApp()">🚀 Ana Uygulamayı Aç</button>
+        <button class="btn" onclick="refreshStatus()">🔄 Durumu Yenile</button>
+        
+        <div style="margin-top: 20px;">
+            <h3>📋 Test Sonuçları:</h3>
+            <div id="test-results" style="background: #f9f9f9; padding: 15px; border-radius: 5px; text-align: left;">
+                <div>Test başlatılıyor...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        
+        function addResult(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            testResults.push(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+            document.getElementById('test-results').innerHTML = testResults.join('<br>');
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+        
+        function testServer() {
+            fetch('http://localhost:7000/')
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('server-status').innerHTML = '<span class="success">✅ Web Sunucu Çalışıyor</span>';
+                        addResult('Web sunucusuna başarıyla bağlanıldı', 'success');
+                        return response.text();
+                    } else {
+                        document.getElementById('server-status').innerHTML = '<span style="color: #f44336; font-weight: bold;">❌ Sunucu Hatası: ' + response.status + '</span>';
+                        addResult('Web sunucusu hatası: ' + response.status, 'error');
+                    }
+                })
+                .then(html => {
+                    if (html && html.includes('Harcama Takipçisi')) {
+                        addResult('Ana sayfa içeriği doğru yüklendi', 'success');
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('server-status').innerHTML = '<span style="color: #f44336; font-weight: bold;">❌ Bağlantı Hatası</span>';
+                    addResult('Web sunucusuna bağlanılamadı: ' + error.message, 'error');
+                });
+        }
+        
+        function testLocalStorage() {
+            try {
+                localStorage.setItem('test-expense-tracker', 'working');
+                const value = localStorage.getItem('test-expense-tracker');
+                localStorage.removeItem('test-expense-tracker');
+                
+                if (value === 'working') {
+                    document.getElementById('localstorage-status').innerHTML = '<span class="success">✅ LocalStorage Çalışıyor</span>';
+                    addResult('LocalStorage başarıyla test edildi', 'success');
+                }
+            } catch (error) {
+                document.getElementById('localstorage-status').innerHTML = '<span style="color: #f44336; font-weight: bold;">❌ LocalStorage Hatası</span>';
+                addResult('LocalStorage testi başarısız: ' + error.message, 'error');
+            }
+        }
+        
+        function openMainApp() {
+            window.open('http://localhost:7000/', '_blank');
+            addResult('Ana uygulama yeni sekmede açıldı', 'info');
+        }
+        
+        function refreshStatus() {
+            addResult('Durum kontrolleri yenileniyor...', 'info');
+            testServer();
+            testLocalStorage();
+        }
+        
+        // Sayfa yüklendiğinde testleri başlat
+        document.addEventListener('DOMContentLoaded', function() {
+            addResult('Test sayfası başarıyla yüklendi', 'success');
+            
+            setTimeout(() => {
+                addResult('Web sunucu durumu kontrol ediliyor...', 'info');
+                testServer();
+            }, 500);
+            
+            setTimeout(() => {
+                addResult('LocalStorage testi yapılıyor...', 'info');
+                testLocalStorage();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

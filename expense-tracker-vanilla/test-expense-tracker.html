@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Expense Tracker</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .test-container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 20px;
+        }
+        .success { 
+            color: #4CAF50; 
+            font-weight: bold; 
+        }
+        .error { 
+            color: #f44336; 
+            font-weight: bold; 
+        }
+        .btn { 
+            background: #6C63FF; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px;
+        }
+        .btn:hover { 
+            background: #5851d8; 
+        }
+        iframe { 
+            width: 100%; 
+            height: 600px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px;
+        }
+        #test-results {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Harcama Takipçisi Test Sayfası</h1>
+        <p><strong>Sunucu Durumu:</strong> <span id="server-status" class="success">✅ Çalışıyor</span></p>
+        <p><strong>LocalStorage Test:</strong> <span id="localstorage-test" class="success">✅ Destekleniyor</span></p>
+        
+        <h3>📋 Test Sonuçları</h3>
+        <div id="test-results">
+            <div>Test başlatılıyor...</div>
+        </div>
+        
+        <h3>🚀 Harcama Takip Uygulaması</h3>
+        <iframe id="app-frame" src="http://localhost:7000/index.html"></iframe>
+        
+        <div style="margin-top: 10px;">
+            <button class="btn" onclick="refreshApp()">🔄 Uygulamayı Yenile</button>
+            <button class="btn" onclick="testFormFunction()">🧪 Form Testi Yap</button>
+            <button class="btn" onclick="clearTestData()">🗑️ Test Verilerini Temizle</button>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        
+        function addTestResult(message, type = 'info') {
+            testResults.push(`[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${message}`);
+            document.getElementById('test-results').innerHTML = testResults.join('<br>');
+        }
+        
+        function testLocalStorage() {
+            try {
+                localStorage.setItem('test', 'value');
+                localStorage.removeItem('test');
+                document.getElementById('localstorage-test').innerHTML = '✅ Destekleniyor';
+                document.getElementById('localstorage-test').className = 'success';
+                addTestResult('LocalStorage başarıyla test edildi', 'success');
+                return true;
+            } catch (e) {
+                document.getElementById('localstorage-test').innerHTML = '❌ Desteklenmiyor';
+                document.getElementById('localstorage-test').className = 'error';
+                addTestResult('LocalStorage hatası: ' + e.message, 'error');
+                return false;
+            }
+        }
+        
+        function refreshApp() {
+            document.getElementById('app-frame').src = 'http://localhost:7000/index.html?' + Date.now();
+            addTestResult('Uygulama yenilendi', 'info');
+        }
+        
+        function testFormFunction() {
+            try {
+                const iframe = document.getElementById('app-frame');
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                
+                // FAB butonuna tıkla
+                const fab = iframeDoc.getElementById('fab');
+                if (fab) {
+                    fab.click();
+                    addTestResult('FAB butonuna tıklandı', 'success');
+                    
+                    // Modal açıldı mı kontrol et
+                    setTimeout(() => {
+                        const modal = iframeDoc.getElementById('transaction-modal');
+                        if (modal && modal.classList.contains('show')) {
+                            addTestResult('Modal başarıyla açıldı', 'success');
+                        } else {
+                            addTestResult('Modal açılamadı', 'error');
+                        }
+                    }, 500);
+                } else {
+                    addTestResult('FAB butonu bulunamadı', 'error');
+                }
+            } catch (e) {
+                addTestResult('Test hatası: ' + e.message, 'error');
+            }
+        }
+        
+        function clearTestData() {
+            try {
+                localStorage.clear();
+                addTestResult('LocalStorage temizlendi', 'info');
+                refreshApp();
+            } catch (e) {
+                addTestResult('Temizleme hatası: ' + e.message, 'error');
+            }
+        }
+        
+        // Sayfa yüklendiğinde testleri çalıştır
+        document.addEventListener('DOMContentLoaded', function() {
+            addTestResult('Test sayfası yüklendi', 'info');
+            
+            // LocalStorage test et
+            setTimeout(testLocalStorage, 1000);
+            
+            // Sunucu durumunu kontrol et
+            setTimeout(() => {
+                fetch('http://localhost:7000/')
+                    .then(response => {
+                        if (response.ok) {
+                            addTestResult('Sunucu yanıt veriyor', 'success');
+                        } else {
+                            addTestResult('Sunucu hatası: ' + response.status, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        addTestResult('Sunucu bağlantı hatası: ' + error.message, 'error');
+                        document.getElementById('server-status').innerHTML = '❌ Çalışmıyor';
+                        document.getElementById('server-status').className = 'error';
+                    });
+            }, 500);
+        });
+    </script>
+</body>
+</html>
